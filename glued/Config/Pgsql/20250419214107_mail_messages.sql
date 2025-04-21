@@ -6,21 +6,24 @@ CREATE TABLE IF NOT EXISTS glued.mail_messages (
                                                    nonce bytea GENERATED ALWAYS AS (decode(md5((doc - 'uuid')::text),'hex')) STORED,
                                                    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
                                                    updated_at timestamp DEFAULT CURRENT_TIMESTAMP,
-                                                   mailbox_uuid uuid GENERATED ALWAYS AS ((doc->>'mailbox_uuid')::uuid) STORED NOT NULL,
-                                                   uid integer GENERATED ALWAYS AS ((doc->>'uid')::int) STORED NOT NULL,
-                                                   folder text GENERATED ALWAYS AS (doc->>'folder') STORED NOT NULL,
+                                                   -- message its refs
+                                                   message_id text GENERATED ALWAYS AS (doc->>'messageId') STORED,
+                                                   body_hash text GENERATED ALWAYS AS (doc->>'bodyHash') STORED,
+                                                   conversation_id text GENERATED ALWAYS AS ((doc->>'conversationId')) STORED,
+                                                   in_reply_to text GENERATED ALWAYS AS (doc->>'inReplyTo') STORED,
+                                                   "references" jsonb GENERATED ALWAYS AS (doc->'references') STORED,
+                                                   -- headers
                                                    subject text GENERATED ALWAYS AS (doc->>'subject') STORED,
                                                    from_address text GENERATED ALWAYS AS (doc->>'fromStr') STORED,
                                                    to_addresses text GENERATED ALWAYS AS (doc->>'toStr') STORED,
                                                    sent_at text GENERATED ALWAYS AS (doc->>'date') STORED NOT NULL,
-                                                   message_id text GENERATED ALWAYS AS (doc->>'message_id') STORED,
-                                                   in_reply_to text GENERATED ALWAYS AS (doc->>'in_reply_to') STORED,
-                                                   "references" jsonb GENERATED ALWAYS AS (doc->'references') STORED,
-                                                   conversation_id text GENERATED ALWAYS AS ((doc->>'conversation_id')) STORED,
-                                                   full_body_hash text GENERATED ALWAYS AS (doc->>'full_body_hash') STORED,
+                                                   -- last location
+                                                   mailbox_uuid uuid GENERATED ALWAYS AS ((doc->>'mailboxUuid')::uuid) STORED NOT NULL,
+                                                   folder text GENERATED ALWAYS AS (doc->>'folder') STORED NOT NULL,
+                                                   uid integer GENERATED ALWAYS AS ((doc->>'uid')::int) STORED NOT NULL,
                                                    UNIQUE (nonce)
 );
-CREATE INDEX IF NOT EXISTS mail_messages_message_id_idx ON glued.mail_messages(message_id);
+CREATE UNIQUE INDEX IF NOT EXISTS mail_messages_message_id_unq ON glued.mail_messages(message_id);
 CREATE INDEX IF NOT EXISTS mail_messages_conversation_id_idx ON glued.mail_messages(conversation_id);
 CREATE INDEX IF NOT EXISTS mail_messages_folder_idx ON glued.mail_messages(folder);
 CREATE INDEX IF NOT EXISTS mail_messages_sent_at_idx ON glued.mail_messages(sent_at);

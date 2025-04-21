@@ -161,6 +161,7 @@ class MailboxController extends AbstractService
     {
         // load mailbox config
         ini_set('memory_limit', '512M');
+        $datadir = "{$this->settings['glued']['datapath']}/{$this->settings['glued']['uservice']}/data";
         $uuid = $args['uuid'] ?? throw new \Exception('Mailbox UUID required', 400);
         $mbdb = new Sql($this->pg, 'mail_boxes');
         $cfg = $mbdb->get($uuid) ?? throw new \Exception('Mailbox not found', 404);
@@ -177,7 +178,7 @@ class MailboxController extends AbstractService
         // prepare db handler and initiate timeout & progress
         $msgDb = new Sql($this->pg, 'mail_messages');
         $start = time();
-        $ttl = 20; // seconds
+        $ttl = 120; // seconds
         $synced = ['folders' => 0, 'messages' => 0];
 
         foreach ($folders as $folder) {
@@ -186,6 +187,7 @@ class MailboxController extends AbstractService
             if (time() - $start > $ttl) { break; }
             if (!@imap_reopen($this->imap, $this->mbox . $folder)) { continue; } 
             $uids = imap_search($this->imap, 'ALL', SE_UID) ?: [];
+            $status = imap_status($this->imap, $this->mbox, SA_UIDVALIDITY | SA_UIDNEXT);
 
             // get all cached UIDs
             $cached = $msgDb
@@ -227,6 +229,20 @@ class MailboxController extends AbstractService
                 array_walk($to, fn(&$e) => $e['address'] = strtolower($e['address']));
                 $toStr = implode(', ', array_column($to, 'address'));  // "carol@baz.net, …"
 
+                // all addresses
+                $seen = [];
+                $hdrs = [
+                    'from','sender','reply-to','return-path','to','cc','bcc','resent-from','resent-sender',
+                    'resent-to','resent-cc','resent-bcc','resent-reply-to','errors-to','disposition-notification-to'
+                ];
+                foreach ($hdrs as $h) {
+                    foreach ($parser->getAddresses($h) ?: [] as $a) {
+                        $seen[strtolower($a['address'])] = true;
+                    }
+                }
+                $all = array_keys($seen);
+                sort($all, SORT_STRING);
+
                 // datetime
                 $dt = ($d = $parser->getHeader('date'))
                     ? (new \DateTimeImmutable(
@@ -244,16 +260,15 @@ class MailboxController extends AbstractService
                 // attachments
                 $attachments = [];
                 foreach ($parser->getAttachments() as $att) {
-                    $attachments[] = [
+                    $attachment = [
                         'filename'    => $att->getFilename(),
                         'contentType' => $att->getContentType(),
                         'disposition' => $att->getContentDisposition(),
                         'contentId'   => $att->getContentId(), // inline CID if any
-                        //'size'        => $att->getSize(),
-                        //'content'     => $att->getContent(),                 // raw binary
+                        'contentHash' => hash('sha512', $att->getContent())
                     ];
-                    //$att->save('/tmp/attachments/' . $att->getFilename(),);
-                    //file_put_contents('/tmp/'.$att->getFilename(), $att->getContent());
+                    $attachments[] = $attachment;
+                    file_put_contents("{$datadir}/{$attachment['contentHash']}", $att->getContent());
                 }
 
                 // references, in-reply-to
@@ -271,24 +286,28 @@ class MailboxController extends AbstractService
 
                 // build JSON doc
                 $doc = [
-                    'mailbox_uuid'    => $uuid,
-                    'folder'          => $folder,
-                    'uid'             => $uid,
-                    'message_id'      => $msgId,
-                    'in_reply_to'     => $inReplyTo,
-                    'references'      => $references,
-                    'conversation_id' => $conversationId,
-                    'subject'         => $subject,
-                    'from'            => $from,
-                    'to'              => $to,
-                    'fromStr'         => $fromStr,
-                    'toStr'           => $toStr,
-                    'date'            => $dt,
-                    'text_body'       => $textBody,
-                    'full_body_hash'  => $bodyRawHash,
+                    'mailboxUuid'        => $uuid,
+                    'folder'             => $folder,
+                    'uidvalidity'        => $status !== false ? (int)$status->uidvalidity : null,
+                    'uid'                => $uid,
+                    'messageId'          => $msgId,
+                    'inReplyTo'          => $inReplyTo,
+                    'references'         => $references,
+                    'conversationId'     => $conversationId,
+                    'subject'            => $subject,
+                    'from'               => $from,
+                    'fromStr'            => $fromStr,
+                    'to'                 => $to,
+                    'toStr'              => $toStr,
+                    'all'                => $all,
+                    'date'               => $dt,
+                    'attachments'        => $attachments,
+                    'textBody'           => $textBody,
+                    'bodyHash'           => $bodyRawHash,
                 ];
 
                 // insert & skip dup‐message_id
+                $msgDb->upsertIgnore = ['(nonce)', '(message_id)'];
                 $upsert = $msgDb->upsert($doc, true);
                 $synced['messages']++;
 
