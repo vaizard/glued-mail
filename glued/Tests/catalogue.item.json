@@ -1,0 +1,125 @@
+{
+  "brand": {
+    "uuid": "c3933bfe-411f-4f99-9f3c-20d351762acf"
+  },
+  "ref": "09-110-18-07",
+  "props": [
+    "isWhole",
+    "isPart",
+    "isVirtual"
+  ],
+  "urn": {
+    "hibc": "+E248958234343",
+    "epc:id:gtin": "0004057605262582",
+    "udi:di": "0004057605262582"
+  },
+  "classification": {
+    "hs:code": "001000002",
+    "hs:origin": "DE",
+    "hs:weight": 0.09,
+    "udi:bdi": "12343233"
+  },
+  "baseunit": {
+    "uom": "each",
+    "qty": 1
+  },
+  "tradeunit": {
+    "uom": "each",
+    "qty": 6
+  },
+  "name": {
+    "cs": "Svetelný hák 40 mm",
+    "de": "Lichthaken 40 mm",
+    "en": "Light hook 40 mm"
+  },
+  "medicaldevice": {
+    "props": [
+      "active",
+      "instrument",
+      "implant",
+      "consumable",
+      "storage",
+      "tray",
+      "sterileContainer",
+      "ivd"
+    ],
+    "classification": {
+      "mdr:class": "IIb",
+      "mdr:rule": "7",
+      "mdr:iat": "2024-02-11",
+      "mdd:class": "IIb",
+      "mdd:rule": "7",
+      "mdd:eat": "2023-12-28",
+      "cz:niszp:rzpro": "33432",
+      "cz:vzp:zum": "123111",
+      "eudamed:class": "0002330",
+      "gmdn": "3234"
+    },
+    "udiCarrier": [
+      "rfid",
+      "dmc",
+      "text",
+      "barcode"
+    ],
+    "attributes": {
+      "usageMax": -1,
+      "tempMin": null,
+      "tempMax": null,
+      "decontamination": [
+        "wiping",
+        "uv",
+        "soaking",
+        "mechanical",
+        "ultrasound",
+        "washing"
+      ],
+      "sterilization": [
+        "plasma",
+        "134",
+        "120"
+      ],
+      "handling": [
+        "hollow",
+        "delicate",
+        "sharp"
+      ],
+      "materials": [
+        "stainlness",
+        "glass",
+        "titanium",
+        "plastics",
+        "silicone",
+        "teflon",
+        "cermaics",
+        "silver"
+      ],
+      "notes": {
+        "en": [
+          "Protect optical lense.",
+          "Avoid scrubbing with brushes.",
+          "Avoid chlorine"
+        ]
+      }
+    }
+  },
+  "meta": {
+    "e8aff276-818a-44bb-8361-d8a2f088378c": {
+      "name": "Svetlovodný hák MARTIN 40mm",
+      "carrier": [
+        "rfid",
+        "text"
+      ]
+    },
+    "a5fe5ec2-2768-4d06-a1d7-6ae398d7cdf1": {
+      "material": {
+        "bulk": [
+          "1111171",
+          "1111172"
+        ],
+        "surface": [
+          "CrMo3"
+        ]
+      }
+    }
+  }
+}

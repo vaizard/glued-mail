@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json‑schema.org/draft‑07/schema#",
+  "$id": "file:///mailbox/mailbox.json",
+  "title": "Mailbox json",
+  "type": "object",
+  "properties": {
+    "host":        { "type": "string", "format": "hostname" },
+    "port":        { "type": "integer", "minimum": 1, "maximum": 65535 },
+    "username":    { "type": "string", "minLength": 1 },
+    "password":    { "type": "string", "minLength": 1 },
+    "encryption":  { "type": "string", "enum": ["ssl","tls","none"], "default":"ssl" },
+    "omitFolders": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Folder names to skip when listing (e.g. [\"Spam\",\"Trash\"])"
+    }
+  },
+  "required": ["host","port","username","password"],
+  "additionalProperties": false
+}

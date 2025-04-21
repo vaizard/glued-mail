@@ -1,0 +1,212 @@
+openapi: 3.1.0
+
+info:
+  title: Glued mail client
+  description: Mail manages multiple high volume mailboxes and enables advanced searching and conversation tracking
+  version: 1.0.0
+  x-glued-service: mail
+servers:
+  - url: /api/mail
+paths:
+  /:
+    x-glued-pathname: be_mail
+    x-glued-provides: openapi
+    get:
+      x-glued-method: Glued\Controllers\ServiceController:getOpenapi
+      summary: Mail OpenAPI specs / Ingress
+      description: Mail Ingress point. Returns the OpenAPI YAML specification for the mail API.
+      operationId: mailIngressGet
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/yaml:
+              schema:
+                type: string
+  /v1/health:
+    x-glued-pathname: be_mail_health
+    x-glued-provides: health
+    get:
+      x-glued-method: Glued\Controllers\ServiceController:getHealth
+      summary: Healthcheck
+      description: A healthcheck endpoint.
+      operationId: mailHealthGet
+      responses:
+        '200':
+          description: Ok
+  /v1/check-connection:
+    x-glued-pathname: be_mail_check_connection
+    x-glued-provides: service
+    get:
+      x-glued-method: Glued\Controllers\MailboxController:checkConnectionGet
+      operationId: mailBoxesCheckConnectionGet
+      summary: Check connection
+      description: Checks connection to a mailbox
+      responses:
+        '400':
+          description: Use a post request with a json mailbox configuration body
+    post:
+      x-glued-method: Glued\Controllers\MailboxController:checkConnectionPost
+      operationId: mailBoxesCheckConnectionPost
+      summary: Check connection
+      description: Checks connection to a mailbox
+      requestBody:
+        description: Mailbox configuration json
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Box'
+      responses:
+        '201':
+          description: Connected
+  /v1/boxes:
+    x-glued-pathname: be_mail_boxes
+    x-glued-provides: service
+    get:
+      x-glued-method: Glued\Controllers\MailboxController:getMailboxes
+      operationId: mailBoxesGet
+      summary: List mailboxes
+      description: Gets all mailboxes.
+      responses:
+        '200':
+          description: Ok
+    post:
+      x-glued-method: Glued\Controllers\MailboxController:createMailbox
+      operationId: mailBoxesPost
+      summary: Add mailbox
+      description: Adds a mailbox according to posted json configuration.
+      requestBody:
+        description: Create a new mailbox
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Box'
+      responses:
+        '201':
+          description: Box was successfully added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+  /v1/boxes/{uuid}:
+    x-glued-pathname: be_mail_box
+    x-glued-provides: service
+    get:
+      x-glued-method: Glued\Controllers\MailboxController:getMailbox
+      operationId: mailBoxGet
+      summary: Mailbox
+      description: Retrieves a single mailbox configuration
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Mailbox json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+    patch:
+      x-glued-method: Glued\Controllers\MailboxController:patchMailbox
+      operationId: mailBoxPatch
+      summary: Patch a mail box
+      description: Patch an existing mailbox configuration
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Patch json
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Box'
+      responses:
+        '200':
+          description: The box was successfully modified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+    delete:
+      x-glued-method: Glued\Controllers\MailboxController:deleteMailbox
+      operationId: mailBoxDelete
+      summary: Delete a mail box
+      description: Delete an existing mailbox
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+  /v1/boxes/{uuid}/check:
+    x-glued-pathname: be_mail_box_check
+    x-glued-provides: service
+    get:
+      x-glued-method: Glued\Controllers\MailboxController:checkMailbox
+      operationId: mailBoxCheckGet
+      summary: Check Mailbox
+      description: Checks if it possible to connect to a mailbox
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Mailbox connected.
+  /v1/boxes/{uuid}/folders:
+    x-glued-pathname: be_mail_box_folders
+    x-glued-provides: service
+    get:
+      x-glued-method: Glued\Controllers\MailboxController:listFolders
+      operationId: mailBoxFoldersGet
+      summary: List folders
+      description: Retrieves all mailbox folders, lists folders to ignore
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Mailbox folders list.
+  /v1/boxes/{uuid}/sync:
+    x-glued-pathname: be_mail_box_sync
+    x-glued-provides: service
+    get:
+      x-glued-method: Glued\Controllers\MailboxController:syncMailbox
+      operationId: mailBoxSyncGet
+      summary: Sync mailbox
+      description: Retrieves all new mail
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Mails synced.
+
+components:
+  schemas:
+    Box:
+      type: object
+      description: Mailbox configuration json

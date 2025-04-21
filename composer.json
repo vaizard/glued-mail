@@ -1,0 +1,88 @@
+{
+  "name": "vaizard/glued-economy",
+  "description": "Economy.",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Pavel Stratil",
+      "email": "pavel@vaizard.org"
+    }
+  ],
+  "require": {
+    "php": "^8.3",
+    "ext-apcu": "*",
+    "ext-bcmath": "*",
+    "ext-curl": "*",
+    "ext-gd": "*",
+    "ext-gmp": "*",
+    "ext-imap": "*",
+    "ext-json": "*",
+    "ext-mailparse": "*",
+    "ext-mbstring": "*",
+    "ext-mysqli": "*",
+    "ext-pdo": "*",
+    "ext-pdo_pgsql": "*",
+    "ext-readline": "*",
+    "ext-soap": "*",
+    "ext-xml": "*",
+    "league/openapi-psr7-validator": "^0",
+    "nyholm/psr7": "^1",
+    "nyholm/psr7-server": "*",
+    "php-di/php-di": "^7",
+    "php-mime-mail-parser/php-mime-mail-parser" : "9.0.1",
+    "psr/http-message": "^1",
+    "ramsey/uuid": "^4",
+    "sabre/event": "^6",
+    "slim/http": "^1",
+    "slim/slim": "^4",
+    "vaizard/glued-lib": "dev-main",
+    "zeuxisoo/slim-whoops": "^0.7"
+  },
+  "require-dev": {
+    "ergebnis/composer-normalize": "^2"
+  },
+  "suggest": {
+    "ext-xdebug": "For dev only"
+  },
+  "minimum-stability": "beta",
+  "prefer-stable": true,
+  "autoload": {
+    "psr-4": {
+      "Glued\\": "glued/"
+    },
+    "files": []
+  },
+  "config": {
+    "allow-plugins": {
+      "ergebnis/composer-normalize": true
+    }
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "composer configure || echo \"[FAIL] Failed to configure glued. Please make sure all env variables are set. Rerun composer configure.\"",
+      "echo \"Run `composer nginx` manually to pick restart this microservice\"",
+      "composer migrate"
+    ],
+    "post-update-cmd": [
+      "composer configure || echo \"[FAIL] Failed to configure glued. Please make sure all env variables are set. Rerun composer configure.\"",
+      "echo \"Run `composer nginx` manually to pick restart this microservice\"",
+      "composer migrate"
+    ],
+    "backup": [
+      "vendor/vaizard/glued-lib/src/Scripts/backup.sh"
+    ],
+    "configure": [
+      "vendor/vaizard/glued-lib/src/Scripts/initpaths.sh",
+      "vendor/vaizard/glued-lib/src/Scripts/rebuild-datacache.sh",
+      "Glued\\Lib\\ComposerHooks::configTool"
+    ],
+    "migrate": [
+      "vendor/vaizard/glued-lib/src/Scripts/migrate.sh"
+    ],
+    "nginx": [
+      "vendor/vaizard/glued-lib/src/Scripts/nginx.sh",
+      "vendor/vaizard/glued-lib/src/Scripts/nginx-reload.sh"
+    ],
+    "start": "php -S localhost:8080 -t public"
+  }
+}
